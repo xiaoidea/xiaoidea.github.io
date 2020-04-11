@@ -52,9 +52,9 @@
       </tags>
   </entry>
   <entry>
-    <title><![CDATA[关于最近]]></title>
-    <url>%2F2018%2F04%2F24%2F%E5%85%B3%E4%BA%8E%E6%9C%80%E8%BF%91%2F</url>
-    <content type="text"><![CDATA[测试]]></content>
+    <title><![CDATA[Profile]]></title>
+    <url>%2F2018%2F04%2F24%2FProfile%2F</url>
+    <content type="text"><![CDATA[戴恒宇大数据开发工程师，数据仓库工程师 联系方式| Tel: 18512547673 | Email: dhytheone@163.com| My WebSite : http://dhy.party 技术栈 编程语言 Java 熟练 Shell/Python 日常运维脚本 后端开发 熟悉Spring/Spring Boot/MyBatis 熟悉常用并发编程组件 离线数据开发 熟悉离线数据仓库建模 Hive熟练，向社区反馈过多个bug，提交过patch被采纳 理解hadoop mapreduce/hdfs，能解决日常问题 实时数据开发 熟悉Flink 有建设实时数仓经验及实时数据应用案例 其他 有kafka/hbase/es使用经验 项目经验 离线数据开发、Hive二次开发与维护 离线数仓：负责BU“用户服务”主题域离线数仓开发，完成自底向上从ods层原始数据到报表层的数据开发。 Hive二次开发与维护 负责部门Hive集群的运维 二次开发Hive支持多metastore功能，解决日常hive bug，部分bug反馈社区，Apache Profile: hengyu.dai 数据系统开发 元数据系统 离线数据仓库元数据系统开发，管理离线数仓中的表资源，主要功能包括：表的多维度查询，血缘关系，表的各方面监控。实现的关键词：SQL解析、Hive Hook。 即席查询 基于Hive Client开发的支持Hive/Presto/Hive on spark的即席查询系统，相比于底层使用hiveserver的开源HUE等产品，大幅提高稳定性。 实时数仓开发 从零搭建基于Flink的实时数仓体系，负责订单与资金模块的数据源接入，实时数据清洗，实时数据落地与应用（HDFS/HBase）。 实时数仓周边服务：Redis实时维度表关联服务，实时数据完整性保障。 数据应用 用户画像系统 数据赋能业务，通过离线数仓+实时计算清洗出的用户特征信息，定义用户画像，提供在线接口输出用户画像，用于各种基于用户身份的营销策略，例如发券、促销、新客优惠等。 实时大屏 重要活动时，实时计算活动期间的各项运营指标，在BI系统上实时更新，实时数据大屏。 工作经历 2016-至今 去哪儿网 目的地事业部 数据开发 教育经历 2009-2013 中山大学 软件学院 学士学位 2013-2016 南京大学 计算机科学与技术 硕士学位]]></content>
       <tags>
         <tag>我, 其他</tag>
       </tags>
