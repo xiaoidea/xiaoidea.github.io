@@ -342,6 +342,16 @@
 
           
             
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/05/23/20190523-关于HiveCli启动慢原因的调查/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/05/23/20190523-关于HiveCli启动慢原因的调查/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
           
 
           
@@ -501,6 +511,9 @@ var jiathis_config={
 
           
 
+  
+    <div class="comments" id="comments">
+    </div>
   
 
 
@@ -786,6 +799,28 @@ var jiathis_config={
 
 
 
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: '2O51HSfM3PM59G16Br2G69DR-gzGzoHsz',
+        appKey: '3MxdKkKfYYICrXOOOey8Mz7s',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
 
 
 
