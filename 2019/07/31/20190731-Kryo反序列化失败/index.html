@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hive,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="About Blank" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="问题还原SQl报错1234567891011121314151617181920212223242526272829303132Error: java.lang.RuntimeException: Failed to load plan: viewfs://xxx/-mr-10005/49f2f715-02e7-4f66-802b-0b080a9c6129/map.xml: org.apache.">
+<meta name="keywords" content="Hive">
+<meta property="og:type" content="article">
+<meta property="og:title" content="20190731 Kryo反序列化失败">
+<meta property="og:url" content="http://yoursite.com/2019/07/31/20190731-Kryo反序列化失败/index.html">
+<meta property="og:site_name" content="About Blank">
+<meta property="og:description" content="问题还原SQl报错1234567891011121314151617181920212223242526272829303132Error: java.lang.RuntimeException: Failed to load plan: viewfs://xxx/-mr-10005/49f2f715-02e7-4f66-802b-0b080a9c6129/map.xml: org.apache.">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131223.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131351.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131438.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131517.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131613.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131645.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Jietu20200411-131716.jpg">
+<meta property="og:updated_time" content="2020-04-11T05:19:49.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="20190731 Kryo反序列化失败">
+<meta name="twitter:description" content="问题还原SQl报错1234567891011121314151617181920212223242526272829303132Error: java.lang.RuntimeException: Failed to load plan: viewfs://xxx/-mr-10005/49f2f715-02e7-4f66-802b-0b080a9c6129/map.xml: org.apache.">
+<meta name="twitter:image" content="http://yoursite.com/uploads/Jietu20200411-131223.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"hide","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/07/31/20190731-Kryo反序列化失败/">
+
+
+
+
+
+  <title>20190731 Kryo反序列化失败 | About Blank</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-hide page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">About Blank</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随遇而安</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/31/20190731-Kryo反序列化失败/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hengyu Dai">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/timg.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="About Blank">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">20190731 Kryo反序列化失败</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-31T13:07:44+08:00">
+                2019-07-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/07/31/20190731-Kryo反序列化失败/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/07/31/20190731-Kryo反序列化失败/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/07/31/20190731-Kryo反序列化失败/" class="leancloud_visitors" data-flag-title="20190731 Kryo反序列化失败">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="问题还原"><a href="#问题还原" class="headerlink" title="问题还原"></a>问题还原</h1><p>SQl报错<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">Error: java.lang.RuntimeException: Failed to load plan: viewfs://xxx/-mr-10005/49f2f715-02e7-4f66-802b-0b080a9c6129/map.xml: org.apache.hive.com.esotericsoftware.kryo.KryoException: Encountered unregistered class ID: 124</span><br><span class="line">Serialization trace:</span><br><span class="line">sortedColsByDirectory (org.apache.hadoop.hive.ql.plan.MapWork)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.Utilities.getBaseWork(Utilities.java:456)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.Utilities.getMapWork(Utilities.java:303)</span><br><span class="line">    at org.apache.hadoop.hive.ql.io.HiveInputFormat.init(HiveInputFormat.java:315)</span><br><span class="line">    at org.apache.hadoop.hive.ql.io.HiveInputFormat.pushProjectionsAndFilters(HiveInputFormat.java:607)</span><br><span class="line">    at org.apache.hadoop.hive.ql.io.HiveInputFormat.pushProjectionsAndFilters(HiveInputFormat.java:582)</span><br><span class="line">    at org.apache.hadoop.hive.ql.io.CombineHiveInputFormat.getRecordReader(CombineHiveInputFormat.java:676)</span><br><span class="line">    at org.apache.hadoop.mapred.MapTask$TrackedRecordReader.&lt;init&gt;(MapTask.java:169)</span><br><span class="line">    at org.apache.hadoop.mapred.MapTask.runOldMapper(MapTask.java:432)</span><br><span class="line">    at org.apache.hadoop.mapred.MapTask.run(MapTask.java:343)</span><br><span class="line">    at org.apache.hadoop.mapred.YarnChild$2.run(YarnChild.java:164)</span><br><span class="line">    at java.security.AccessController.doPrivileged(Native Method)</span><br><span class="line">    at javax.security.auth.Subject.doAs(Subject.java:422)</span><br><span class="line">    at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1762)</span><br><span class="line">    at org.apache.hadoop.mapred.YarnChild.main(YarnChild.java:158)</span><br><span class="line">Caused by: org.apache.hive.com.esotericsoftware.kryo.KryoException: Encountered unregistered class ID: 124</span><br><span class="line">Serialization trace:</span><br><span class="line">sortedColsByDirectory (org.apache.hadoop.hive.ql.plan.MapWork)</span><br><span class="line">    at org.apache.hive.com.esotericsoftware.kryo.util.DefaultClassResolver.readClass(DefaultClassResolver.java:137)</span><br><span class="line">    at org.apache.hive.com.esotericsoftware.kryo.Kryo.readClass(Kryo.java:670)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.SerializationUtilities$KryoWithHooks.readClass(SerializationUtilities.java:175)</span><br><span class="line">    at org.apache.hive.com.esotericsoftware.kryo.serializers.ObjectField.read(ObjectField.java:118)</span><br><span class="line">    at org.apache.hive.com.esotericsoftware.kryo.serializers.FieldSerializer.read(FieldSerializer.java:551)</span><br><span class="line">    at org.apache.hive.com.esotericsoftware.kryo.Kryo.readObject(Kryo.java:686)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.SerializationUtilities$KryoWithHooks.readObject(SerializationUtilities.java:200)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.SerializationUtilities.deserializeObjectByKryo(SerializationUtilities.java:615)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.SerializationUtilities.deserializePlan(SerializationUtilities.java:524)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.SerializationUtilities.deserializePlan(SerializationUtilities.java:477)</span><br><span class="line">    at org.apache.hadoop.hive.ql.exec.Utilities.getBaseWork(Utilities.java:416)</span><br><span class="line">    ... 13 more</span><br></pre></td></tr></table></figure></p>
+<h1 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h1><h2 id="问题产生的背景"><a href="#问题产生的背景" class="headerlink" title="问题产生的背景"></a>问题产生的背景</h2><p>首先描述下上述错误产生的上下文：</p>
+<ol>
+<li><p>Hive是一个将SQL编译成MR程序的sql编译器，并不负责执行MR任务</p>
+</li>
+<li><p>一个典型的MR任务，需要一个实现org.apache.hadoop.mapred.Mapper接口的mapper类，一个实现org.apache.hadoop.mapred.Reducer的reducer类，还要一个控制类设置任务相关参数，并提交给集群执行</p>
+</li>
+<li><p>Hive也不例外，Hive提交任务的控制器是org.apache.hadoop.hive.ql.exec.mr.ExecDriver，Mapper类是统一的，都是org.apache.hadoop.hive.ql.exec.mr.ExecMapper，reducer类也是统一的，org.apache.hadoop.hive.ql.exec.mr.ExecReducer</p>
+</li>
+</ol>
+<p>下面都以mapper为例，reducer一样</p>
+<ol start="4">
+<li><p>ExecMapper通过内部的operator来区分具体每个sql的每个mapper干什么事情，内部持有一个AbstractMapOperator属性，执行时是调用AbstractMapOperator#process来干活</p>
+</li>
+<li><p>Hive内部使用MapWork来描述一个mapper的工作，（4）中的AbstractMapOperator具体干什么事情，是由MapWork决定的，hadoop集群上的节点是通过Utilities.getMapWork(job)获取一个MapWork对象</p>
+</li>
+<li><p>终于进入正题了，Utilities.getMapWork(job)是读取HDFS的map.xml文件，将文件内容反序列化为java对象，而map.xml是由Hive客户端写入HDFS上的，也就是说，HDFS作为媒介，保存Hive端编译好的mapper/reducer内部的执行细节，然后在yarn集群上每个container从hdfs上读取xml文件，将其反序列化为对象，然后执行。</p>
+</li>
+<li><p>map.xml和reducer.xml虽然以xml结尾，但这是历史原因，早期的hive用xml保存序列化的结果，但是（记得是从2.0开始）目前hive只有一种序列化方式，就是kryo，xml其实是二进制文件。这个xml文件比较难捕捉，任务执行完成后不管是否正常结束都会自动删除，只能用debug的方式在写完文件后，下载下来。下面放一个上面SQL的map.xml文件：</p>
+</li>
+</ol>
+<p>map.xml</p>
+<ol start="8">
+<li>回头看下上面的错误就能看明白了，Hive客户端将map.xml文件写到HDFS上的一个路径，在hadoop端反序列化map.xml时，kryo反序列化失败了，导致hadoop端获取不到mapper任务</li>
+</ol>
+<h2 id="解决问题的尝试"><a href="#解决问题的尝试" class="headerlink" title="解决问题的尝试"></a>解决问题的尝试</h2><p>解决问题首先google，上述错误在google上信息很少，但也有几条。</p>
+<ol>
+<li><a href="https://github.com/EsotericSoftware/kryo/issues/307" target="_blank" rel="noopener">https://github.com/EsotericSoftware/kryo/issues/307</a></li>
+</ol>
+<p>这个issue跟我面临的问题基本一致，提到了kryo的仓库里，下面kyro的作者之一回复说可能是上一个序列化属性占了大量的空间导致取下一个kryo class id的时候取错了。但是在我的例子里，本身序列化的文件就不大，这条pass。</p>
+<ol start="2">
+<li><a href="https://issues.apache.org/jira/browse/HIVE-11519" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/HIVE-11519</a></li>
+</ol>
+<p>这是一个Hive的issue，里面提的问题也跟我遇到的一致，但是处于未解决状态，下面的回复引导了另一个issue：<a href="https://issues.apache.org/jira/browse/HIVE-12175" target="_blank" rel="noopener">https://issues.apache.org/jira/browse/HIVE-12175</a> 这个issue号称解决了Hive中大量的kryo序列化bug，但是fix version是2.0.0，我们用的hive版本是2.1.1，高于它，可以预见这个issue也没什么用</p>
+<ol start="3">
+<li>翻遍了google，有说hive on spark问题的，有说hive并行化执行bug的，有说集群中存在老的hive相关类的class的，能通过改配置调整的都试过全部无效</li>
+</ol>
+<p>只能磕代码了。</p>
+<p>第一个尝试是在本地复现反序列化的问题。将Hive编译的map.xml下载到本地，然后在Hive中新建一个测试类，尝试去反序列化该文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">public class KryoDebug &#123;</span><br><span class="line"> </span><br><span class="line">    public static void main(String[] args) throws Exception &#123;</span><br><span class="line">        abnormal();</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    public static void abnormal() throws Exception &#123;</span><br><span class="line">        Kryo kryo = SerializationUtilities.borrowKryo();</span><br><span class="line">        String path = KryoDebug.class.getClassLoader().getResource(&quot;map.xml&quot;).getPath();</span><br><span class="line">        File mapFile = new File(path);</span><br><span class="line">        FileInputStream inputStream = new FileInputStream(mapFile);</span><br><span class="line">        MapWork mapWork = SerializationUtilities.deserializePlan(kryo, inputStream, MapWork.class);</span><br><span class="line">        System.out.println(mapWork);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>很遗憾，上面的代码执行是没问题的，在本地无法复现反序列化的问题，为了进一步确定本地没问题，将出错的SQL使用本地模式执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SET mapreduce.framework.name=local;</span><br><span class="line">drop table if exists temp.xxx_debug2;</span><br><span class="line">create table temp.xxx_debug2 stored as orc as</span><br><span class="line">select</span><br><span class="line">to_json(price_promotion)</span><br><span class="line">from ods_xxx</span><br><span class="line">where dt =&apos;20190722&apos; and hour=20</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>使用本地模式执行上述SQL也是可以正常执行，因此排除了SQL bug、Hive bug、Hadoop bug等问题，怀疑是集群环境和本地环境不一致。</p>
+<p>第二个尝试是去测试集群中各类的版本是否和Hive端一致.</p>
+<p>首先是验证反序列的MapWork客户端和集群是否一致：在集群上跑输出来源和字段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">if (planClass.equals(MapWork.class)) &#123;</span><br><span class="line">  String path = &quot;org.apache.hadoop.hive.ql.plan.MapWork&quot;;</span><br><span class="line">  ClassLoader classLoader = Utilities.getSessionSpecifiedClassLoader();</span><br><span class="line">  LOG.info(&quot;MapWork反序列化:&quot; + classLoader.getResource(path.replace(&apos;.&apos;, &apos;/&apos;) + &quot;.class&quot;).toString());</span><br><span class="line">  Class&lt;MapWork&gt; clazz = MapWork.class;</span><br><span class="line">  Field[] fields = clazz.getDeclaredFields();</span><br><span class="line">  StringBuilder sb = new StringBuilder();</span><br><span class="line">  for (Field field : fields) &#123;</span><br><span class="line">    sb.append(field.getName()).append(&quot;###&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">  LOG.info(&quot;MapWork反序列化属性:&quot; + sb.toString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2019-07-31 17:42:25,266 INFO [main] org.apache.hadoop.hive.ql.exec.SerializationUtilities: MapWork反序列化:jar:file:/data5/hadoop2x/nm-local-dir/usercache/qhstats/appcache/application_1564438364333_147100/filecache/10/job.jar/job.jar!/org/apache/hadoop/hive/ql/plan/MapWork.class</span><br><span class="line">2019-07-31 17:42:25,266 INFO [main] org.apache.hadoop.hive.ql.exec.SerializationUtilities: MapWork反序列化属性:pathToAliases###pathToPartitionInfo###aliasToWork###aliasToPartnInfo###nameToSplitSample###bucketedColsByDirectory###sortedColsByDirectory###tmpHDFSPath###tmpPathForPartitionPruning###inputformat###indexIntermediateFile###numMapTasks###maxSplitSize###minSplitSize###minSplitSizePerNode###minSplitSizePerRack###samplingType###SAMPLING_ON_PREV_MR###SAMPLING_ON_START###leftInputJoin###baseSrc###mapAliases###mapperCannotSpanPartns###inputFormatSorted###useBucketizedHiveInputFormat###dummyTableScan###eventSourceTableDescMap###eventSourceColumnNameMap###eventSourceColumnTypeMap###eventSourcePartKeyExprMap###doSplitsGrouping###vectorizedRowBatch###includedBuckets###llapIoDesc###$assertionsDisabled###</span><br></pre></td></tr></table></figure></p>
+<p>可以看到class来自hive提交上去的jar包，比较了属性和本地class属性比较，也完全一致。排除了集群classpath下MapWork类冲突的问题</p>
+<p>其次验证kryo版本是否一致，验证的结果是集群上使用的kryo也是来自hive提上去的。排除kryo class类冲突问题。</p>
+<p>第三个尝试是针对反序列化错误的字段：</p>
+<p>sortedColsByDirectory (org.apache.hadoop.hive.ql.plan.MapWork)<br>在反序列化sortedColsByDirectory字段发生错误，在com.esotericsoftware.kryo.pool.KryoFactory#create中让kryo不去序列化该字段：</p>
+<p><img src="/uploads/Jietu20200411-131223.jpg" alt></p>
+<p>重新编译hive后执行还是不行，包另一个字段出错了，而且这种方式是不可取的，不能说不序列化一个字段就不序列化了，sortedColsByDirectory在一些SQL中有用。</p>
+<p>第四个尝试是怀疑SQL中用的to_json UDF有问题，UDF包中有hive相关类，在这里的尝试是将该UDF中所有用到的class，依赖全部改为provided（除了hive和hadoop中不存在的class），结果居然还是报同样的错。</p>
+<p>第五个尝试是怀疑jdk版本的问题，hiveclient的jdk是8u60，hadoop集群jdk是8u131，于是将客户端jdk版本升级到8u131，仍然报错。</p>
+<p>上述尝试全部失败后，实在没思路了，有一周时间没继续研究这个问题。</p>
+<h2 id="找到新的切入点"><a href="#找到新的切入点" class="headerlink" title="找到新的切入点"></a>找到新的切入点</h2><p>既然是kryo反序列化的问题，还是得从kryo入手。</p>
+<p>kyro本身在序列化的时候，可以通过执行下面指令将序列化的详细过程输出到stdout中</p>
+<blockquote>
+<p>Log.TRACE();</p>
+</blockquote>
+<p>在Hive中加入上述代码，重新编译Hive并执行SQL，输出的结果大概是这样：</p>
+<p><img src="/uploads/Jietu20200411-131351.jpg" alt></p>
+<p>从错误日志：</p>
+<p>Encountered unregistered class ID: 124<br>可以知道是124号class反序列化异常，看下124号序列话的是什么：</p>
+<p><img src="/uploads/Jietu20200411-131438.jpg" alt></p>
+<p>是org.apache.hadoop.hive.ql.plan.TableScanDesc，于是猜测是该类未在序列化时注册，于是在hive中注册kyro时，手动注册该类：</p>
+<p>org.apache.hadoop.hive.ql.exec.SerializationUtilities</p>
+<p><img src="/uploads/Jietu20200411-131517.jpg" alt></p>
+<p>重新编译并执行，问题依然存在，此时已经处于崩溃边缘。</p>
+<p>看来从序列化日志是看不出什么东西了，那就从反序列日志入手：</p>
+<p>本地的反序列日志容易获得，只需在本地运行上面的KryoDebug时，加上Log.TRACE();但是在集群上跑的时候，加上Log.TRACE();并不能在集群日志上打出反序列化日志，这是为什么？</p>
+<p>研究了一阵发现集群日志只会显示LOG输出的日志，kyro的序列化日志是直接输出到标准输出的，而stdout输出的东西不会显示在集群日志上，我又没办法登上集群机器上看标准输出的东西，最后想了个取巧的方案，将标准输出“移植”到LOG中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">// 这个类用于将标准输出转移到LOG里</span><br><span class="line">public class CustomOutputStream extends OutputStream &#123;</span><br><span class="line">    Logger logger;</span><br><span class="line">    StringBuilder stringBuilder;</span><br><span class="line"> </span><br><span class="line">    public CustomOutputStream(Logger logger)</span><br><span class="line">    &#123;</span><br><span class="line">        this.logger = logger;</span><br><span class="line">        stringBuilder = new StringBuilder();</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    @Override</span><br><span class="line">    public final void write(int i) throws IOException &#123;</span><br><span class="line">        char c = (char) i;</span><br><span class="line">        if(c == &apos;\r&apos; || c == &apos;\n&apos;) &#123;</span><br><span class="line">            if(stringBuilder.length() &gt; 0) &#123;</span><br><span class="line">                logger.info(stringBuilder.toString());</span><br><span class="line">                stringBuilder = new StringBuilder();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else</span><br><span class="line">            stringBuilder.append(c);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">// 全局设置一次重定向stdout</span><br><span class="line">System.setOut(new PrintStream(new CustomOutputStream(LOG)));</span><br></pre></td></tr></table></figure>
+<p>这时候集群日志上终于可以显示Kryo日志了：</p>
+<p><img src="/uploads/Jietu20200411-131613.jpg" alt></p>
+<p>将集群上的kryo反序列化日志（失败的）和我本机的反序列化日志（成功的）进行对比，果然发现不同：</p>
+<p>本地日志<br><img src="/uploads/Jietu20200411-131645.jpg" alt></p>
+<p>集群日志<br><img src="/uploads/Jietu20200411-131716.jpg" alt><br>对比两个日志，发现从Field _parent: class org.codehaus.jackson.sym.BytesToNameCanonicalizer这一行为分割，前面的日志两者一样，后面的日志开始不一样。</p>
+<p>于是怀疑是这个类的问题，这是jackson里的类，udf中用到的。但是之前已经尝试过将udf中的类改为provided，并没有用。突然想起来会不会hive中的jackson和hadoop中的jackson冲突，让hadoop团队查了下hadoop中的jackson版本是1.9.13，然后我查了下hive的jackson版本，是1.9.2.</p>
+<p>最后一次尝试！</p>
+<p>将hive中的jackson版本改为1.9.13，重新编译hive，执行sql。amazing happens！成功了。</p>
+<p>所以最终定位到的问题是hive和hadoop中存在jackson类冲突，而udf用到了该类，导致在序列化时，用的hive端的jackson（1.9.2），而在反序列化时，用的hadoop端的jackson（1.9.13），至于为什么反序列时不用1.9.2的jackson，这谁tm知道呢，这就是同名类加载顺序不确定性恶心的地方了。</p>
+<h1 id="问题总结"><a href="#问题总结" class="headerlink" title="问题总结"></a>问题总结</h1><p>这是我处理过的最为棘手的一个Hive问题。难点在于：</p>
+<ul>
+<li>定位问题难，kryo反序列报错，这个错可能导致的原因太多了，而且更为关键的是我本地无法复现反序列化错误。</li>
+<li>集群上调试困难，代码是跑在hadoop集群上报错的，而我无法debug hadoop集群代码（毕竟你不能在公司生产集群上打个断点调试）<br>收获是学习了kryo相关知识。</li>
+</ul>
+<p>教训是class冲突真特么难分析，终于知道为什么公司强制每次push代码都检测工程依赖有没有重复的class了，万一因为class冲突导致错误是真的难发现。</p>
+<p>而在我们的HIVE SQL运行环境里，似乎类冲突很难避免，因为hadoop/hive/udf jar都有各自的依赖包，在执行sql时，这些依赖搅成一团，难保不冲突。</p>
+<p>该怎么做尽量减少这类问题？</p>
+<p>UDF pom里绝对绝对不能随意添加依赖，在添加之前必须检测hive和hadoop中是否已经存在该依赖！如果都不存在，可以添加，如果有一个存在，尽量与已经存在的版本保持一致</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Hive/" rel="tag"># Hive</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/23/20190523-关于HiveCli启动慢原因的调查/" rel="next" title="20190523 关于HiveCli启动慢原因的调查">
+                <i class="fa fa-chevron-left"></i> 20190523 关于HiveCli启动慢原因的调查
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/07/29/Calcite入门介绍/" rel="prev" title="Calcite入门介绍">
+                Calcite入门介绍 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微博</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/timg.jpeg" alt="Hengyu Dai">
+            
+              <p class="site-author-name" itemprop="name">Hengyu Dai</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题还原"><span class="nav-number">1.</span> <span class="nav-text">问题还原</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#解决过程"><span class="nav-number">2.</span> <span class="nav-text">解决过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题产生的背景"><span class="nav-number">2.1.</span> <span class="nav-text">问题产生的背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解决问题的尝试"><span class="nav-number">2.2.</span> <span class="nav-text">解决问题的尝试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#找到新的切入点"><span class="nav-number">2.3.</span> <span class="nav-text">找到新的切入点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题总结"><span class="nav-number">3.</span> <span class="nav-text">问题总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hengyu Dai</span>
+
+  
+</div>
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: '2O51HSfM3PM59G16Br2G69DR-gzGzoHsz',
+        appKey: '3MxdKkKfYYICrXOOOey8Mz7s',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("2O51HSfM3PM59G16Br2G69DR-gzGzoHsz", "3MxdKkKfYYICrXOOOey8Mz7s");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
