@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon.ico?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="About Blank" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="一. 四种GraphFlink在将用户代码提交到集群上执行过程中，根据所处的阶段，会生成四种不同类型的DAG图，分别是:  StreamGraphClient端生成，根据用户编写的Stream API代码生成的拓扑图。 JobGraphClient端生成，StreamGraph经过优化后生成JobGraph。其中主要的优化是Operator Chain，将符合条件的相邻节点chain在一起执行，F">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flink执行流程(一)：生成StreamGraph">
+<meta property="og:url" content="http://yoursite.com/2021/07/30/Flink执行流程-一/index.html">
+<meta property="og:site_name" content="About Blank">
+<meta property="og:description" content="一. 四种GraphFlink在将用户代码提交到集群上执行过程中，根据所处的阶段，会生成四种不同类型的DAG图，分别是:  StreamGraphClient端生成，根据用户编写的Stream API代码生成的拓扑图。 JobGraphClient端生成，StreamGraph经过优化后生成JobGraph。其中主要的优化是Operator Chain，将符合条件的相邻节点chain在一起执行，F">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/uploads/20210730-transformations.png">
+<meta property="og:image" content="http://yoursite.com/uploads/20210730-StreamOperator.png">
+<meta property="og:image" content="http://yoursite.com/uploads/Xnip2021-08-02_11-35-31.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Xnip2021-08-02_11-37-28.jpg">
+<meta property="og:image" content="http://yoursite.com/uploads/Xnip2021-08-02_16-05-48.jpg">
+<meta property="og:updated_time" content="2021-08-02T08:08:43.089Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flink执行流程(一)：生成StreamGraph">
+<meta name="twitter:description" content="一. 四种GraphFlink在将用户代码提交到集群上执行过程中，根据所处的阶段，会生成四种不同类型的DAG图，分别是:  StreamGraphClient端生成，根据用户编写的Stream API代码生成的拓扑图。 JobGraphClient端生成，StreamGraph经过优化后生成JobGraph。其中主要的优化是Operator Chain，将符合条件的相邻节点chain在一起执行，F">
+<meta name="twitter:image" content="http://yoursite.com/uploads/20210730-transformations.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"hide","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/07/30/Flink执行流程-一/">
+
+
+
+
+
+  <title>Flink执行流程(一)：生成StreamGraph | About Blank</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-hide page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">About Blank</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">随遇而安</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/07/30/Flink执行流程-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hengyu Dai">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/timg.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="About Blank">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Flink执行流程(一)：生成StreamGraph</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-07-30T15:58:40+08:00">
+                2021-07-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2021/07/30/Flink执行流程-一/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/07/30/Flink执行流程-一/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2021/07/30/Flink执行流程-一/" class="leancloud_visitors" data-flag-title="Flink执行流程(一)：生成StreamGraph">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="一-四种Graph"><a href="#一-四种Graph" class="headerlink" title="一. 四种Graph"></a>一. 四种Graph</h1><p>Flink在将用户代码提交到集群上执行过程中，根据所处的阶段，会生成四种不同类型的DAG图，分别是:</p>
+<ul>
+<li>StreamGraph<br>Client端生成，根据用户编写的Stream API代码生成的拓扑图。</li>
+<li>JobGraph<br>Client端生成，StreamGraph经过优化后生成JobGraph。<br>其中主要的优化是Operator Chain，将符合条件的相邻节点chain在一起执行，Flink的一个Operator占用TaskManager的一个线程执行，将多个operator合并成一个operator的好处是避免网络io和序列化开销，同时减少线程数、降低线程切换成本。</li>
+<li>ExecutionGraph<br>JobManager生成，根据JobGraph生成ExecutionGraph，是JobGraph的并行化版本。</li>
+<li>PhysicalGraph<br>各个TaskManager实际执行运行图，没有具体的实现类</li>
+</ul>
+<p>其关系是 StreamGraph -&gt; JobGraph -&gt; ExecutionGraph -&gt; PhysicalGraph<br>下面以一个最简单的代码示例，演示StreamGraph是如何生成的：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();</span><br><span class="line">    env.setParallelism(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    DataStream&lt;Integer&gt; source = env.fromElements(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>);</span><br><span class="line">    DataStream&lt;Integer&gt; transform = source.map(x -&gt; x * x);</span><br><span class="line">    transform.print();</span><br><span class="line"></span><br><span class="line">    env.execute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="二-StreamGraph生成中的关键对象"><a href="#二-StreamGraph生成中的关键对象" class="headerlink" title="二. StreamGraph生成中的关键对象"></a>二. StreamGraph生成中的关键对象</h1><h2 id="DataStream"><a href="#DataStream" class="headerlink" title="DataStream"></a>DataStream</h2><blockquote>
+<p>对应类：org.apache.flink.streaming.api.datastream.DataStream</p>
+</blockquote>
+<p>DataStream有两层含义，一是动态的数据流，二是用户编程接口。</p>
+<ol>
+<li>动态的数据流：DataStream对象底层持有一个Transformation对象，表示数据流。</li>
+<li>用户编程接口：DataStream类定义诸如map、keyBy、addSink等方法，用户调用这些接口在动态的数据流上进行数据转换。</li>
+</ol>
+<h2 id="Transformation"><a href="#Transformation" class="headerlink" title="Transformation"></a>Transformation</h2><blockquote>
+<p>对应类: org.apache.flink.api.dag.Transformation</p>
+</blockquote>
+<p>Transformation表示从一个或多个DataStream生成一个新的DataStream的转换，DataStream底层就是一个Transformation。</p>
+<p>Transformation的类图如下：<br><img src="/uploads/20210730-transformations.png" alt></p>
+<ul>
+<li><code>LegacySourceTransformation/SourceTransformation</code>：生成Source流的Transformation</li>
+<li><code>OneInputTransformation</code>：接受一个输入参数的Transformation</li>
+<li><code>LegacySinkTransformation/SinkTransformation</code>：生成Sink流的Transformation</li>
+</ul>
+<h2 id="StreamOperator"><a href="#StreamOperator" class="headerlink" title="StreamOperator"></a>StreamOperator</h2><blockquote>
+<p>对应类: org.apache.flink.streaming.api.operators.StreamOperator</p>
+</blockquote>
+<p>如果说Transformation可以代表一个数据流，那么StreamOperator则表示对数据流的转换操作</p>
+<p><code>Transformation(out) = Transformation(source) + StreamOperator</code></p>
+<p>下图中的AbstractUdfStreamOperator封装了用户的UDF代码，即我们日常开发的flink程序中的map/filter/sink等各类操作都被包装在AbstractUdfStreamOperator的某个子类中提交给Flink<br><img src="/uploads/20210730-StreamOperator.png" alt></p>
+<h2 id="Function"><a href="#Function" class="headerlink" title="Function"></a>Function</h2><blockquote>
+<p>对应类: org.apache.flink.api.common.functions.Function</p>
+</blockquote>
+<p>用户对数据流操作的具体函数实现，典型的如MapFunction/FilterFunction等</p>
+<h2 id="StreamGraph-Transformation-StreamOperator-Function关系"><a href="#StreamGraph-Transformation-StreamOperator-Function关系" class="headerlink" title="StreamGraph/Transformation/StreamOperator/Function关系"></a>StreamGraph/Transformation/StreamOperator/Function关系</h2><ol>
+<li><code>StreamGraph</code>基于<code>Transformation</code>的关系树生成。</li>
+<li><code>Transformation</code>实例拥有<code>StreamOperator</code>属性，描述对Stream的转换方式。</li>
+<li><code>StreamOperator</code>实例拥有<code>Function</code>属性，接受开发者的具体实现。</li>
+</ol>
+<h1 id="三-源码跟踪"><a href="#三-源码跟踪" class="headerlink" title="三. 源码跟踪"></a>三. 源码跟踪</h1><h2 id="创建环境"><a href="#创建环境" class="headerlink" title="创建环境"></a>创建环境</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用户代码</span></span><br><span class="line"><span class="keyword">final</span> StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#getExecutionEnvironment()</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> StreamExecutionEnvironment <span class="title">getExecutionEnvironment</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> getExecutionEnvironment(<span class="keyword">new</span> Configuration());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#getExecutionEnvironment(org.apache.flink.configuration.Configuration)</span></span><br><span class="line"><span class="comment">// 本地执行时，调用StreamExecutionEnvironment.createLocalEnvironment(configuration)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> StreamExecutionEnvironment <span class="title">getExecutionEnvironment</span><span class="params">(Configuration configuration)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Utils.resolveFactory(threadLocalContextEnvironmentFactory, contextEnvironmentFactory)</span><br><span class="line">            .map(factory -&gt; factory.createExecutionEnvironment(configuration))</span><br><span class="line">            .orElseGet(() -&gt; StreamExecutionEnvironment.createLocalEnvironment(configuration));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#createLocalEnvironment(org.apache.flink.configuration.Configuration)</span></span><br><span class="line"><span class="comment">// 创建LocalStreamEnvironment</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LocalStreamEnvironment <span class="title">createLocalEnvironment</span><span class="params">(Configuration configuration)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (configuration.getOptional(CoreOptions.DEFAULT_PARALLELISM).isPresent()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> LocalStreamEnvironment(configuration);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Configuration copyOfConfiguration = <span class="keyword">new</span> Configuration();</span><br><span class="line">        copyOfConfiguration.addAll(configuration);</span><br><span class="line">        copyOfConfiguration.set(CoreOptions.DEFAULT_PARALLELISM, defaultLocalParallelism);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> LocalStreamEnvironment(copyOfConfiguration);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注: LocalStreamEnvironment</span></span><br><span class="line"><span class="comment">// LocalStreamEnvironment继承自StreamExecutionEnvironment，StreamExecutionEnvironment中包含Transformation的list</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StreamExecutionEnvironment</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> List&lt;Transformation&lt;?&gt;&gt; transformations = <span class="keyword">new</span> ArrayList&lt;&gt;();  <span class="comment">// 持有transformations</span></span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="构建source-stream"><a href="#构建source-stream" class="headerlink" title="构建source stream"></a>构建source stream</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用户代码</span></span><br><span class="line">DataStream&lt;Integer&gt; source = env.fromElements(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#fromElements(OUT...)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> &lt;OUT&gt; <span class="function">DataStreamSource&lt;OUT&gt; <span class="title">fromElements</span><span class="params">(OUT... data)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> fromCollection(Arrays.asList(data), typeInfo);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#fromCollection(java.util.Collection&lt;OUT&gt;, org.apache.flink.api.common.typeinfo.TypeInformation&lt;OUT&gt;)</span></span><br><span class="line"><span class="keyword">public</span> &lt;OUT&gt; <span class="function">DataStreamSource&lt;OUT&gt; <span class="title">fromCollection</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        Collection&lt;OUT&gt; data, TypeInformation&lt;OUT&gt; typeInfo)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    SourceFunction&lt;OUT&gt; function;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 这里实现了Function</span></span><br><span class="line">        <span class="comment">// FromElementsFunction实现SourceFunction接口，其run方法从输入参数中的data逐个的发出数据element</span></span><br><span class="line">        function = <span class="keyword">new</span> FromElementsFunction&lt;&gt;(typeInfo.createSerializer(getConfig()), data);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage(), e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> addSource(function, <span class="string">"Collection Source"</span>, typeInfo, Boundedness.BOUNDED)</span><br><span class="line">            .setParallelism(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#addSource(org.apache.flink.streaming.api.functions.source.SourceFunction&lt;OUT&gt;, java.lang.String, org.apache.flink.api.common.typeinfo.TypeInformation&lt;OUT&gt;, org.apache.flink.api.connector.source.Boundedness)</span></span><br><span class="line"><span class="keyword">private</span> &lt;OUT&gt; <span class="function">DataStreamSource&lt;OUT&gt; <span class="title">addSource</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> SourceFunction&lt;OUT&gt; function,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> String sourceName,</span></span></span><br><span class="line"><span class="function"><span class="params">        @Nullable <span class="keyword">final</span> TypeInformation&lt;OUT&gt; typeInfo,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> Boundedness boundedness)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里把FromElementsFunction用StreamSource包起来</span></span><br><span class="line">    <span class="comment">// StreamSource是AbstractUdfStreamOperator实现类，即StreamOperator的实现类</span></span><br><span class="line">    <span class="keyword">final</span> StreamSource&lt;OUT, ?&gt; sourceOperator = <span class="keyword">new</span> StreamSource&lt;&gt;(function);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DataStreamSource&lt;&gt;(</span><br><span class="line">            <span class="keyword">this</span>, resolvedTypeInfo, sourceOperator, isParallel, sourceName, boundedness);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注: AbstractUdfStreamOperator中持有UDF对象</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractUdfStreamOperator</span>&lt;<span class="title">OUT</span>, <span class="title">F</span> <span class="keyword">extends</span> <span class="title">Function</span>&gt;</span></span><br><span class="line"><span class="class">        <span class="keyword">extends</span> <span class="title">AbstractStreamOperator</span>&lt;<span class="title">OUT</span>&gt; <span class="keyword">implements</span> <span class="title">OutputTypeConfigurable</span>&lt;<span class="title">OUT</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** The user function. */</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> F userFunction;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AbstractUdfStreamOperator</span><span class="params">(F userFunction)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.userFunction = requireNonNull(userFunction);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4. org.apache.flink.streaming.api.datastream.DataStreamSource#DataStreamSource(org.apache.flink.streaming.api.environment.StreamExecutionEnvironment, org.apache.flink.api.common.typeinfo.TypeInformation&lt;T&gt;, org.apache.flink.streaming.api.operators.StreamSource&lt;T,?&gt;, boolean, java.lang.String, org.apache.flink.api.connector.source.Boundedness)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">DataStreamSource</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        StreamExecutionEnvironment environment,</span></span></span><br><span class="line"><span class="function"><span class="params">        TypeInformation&lt;T&gt; outTypeInfo,</span></span></span><br><span class="line"><span class="function"><span class="params">        StreamSource&lt;T, ?&gt; operator,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">boolean</span> isParallel,</span></span></span><br><span class="line"><span class="function"><span class="params">        String sourceName,</span></span></span><br><span class="line"><span class="function"><span class="params">        Boundedness boundedness)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>(</span><br><span class="line">            environment,</span><br><span class="line">            <span class="comment">// 这里构建了LegacySourceTransformation（Transformation的实现类）</span></span><br><span class="line">            <span class="comment">// 传入StreamOperator（上面构造的StreamSource）</span></span><br><span class="line">            <span class="keyword">new</span> LegacySourceTransformation&lt;&gt;(</span><br><span class="line">                    sourceName,</span><br><span class="line">                    operator,</span><br><span class="line">                    outTypeInfo,</span><br><span class="line">                    environment.getParallelism(),</span><br><span class="line">                    boundedness));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.isParallel = isParallel;</span><br><span class="line">    <span class="keyword">if</span> (!isParallel) &#123;</span><br><span class="line">        setParallelism(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 构建LegacySourceTransformation</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LegacySourceTransformation</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">PhysicalTransformation</span>&lt;<span class="title">T</span>&gt;</span></span><br><span class="line"><span class="class">        <span class="keyword">implements</span> <span class="title">WithBoundedness</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> StreamOperatorFactory&lt;T&gt; operatorFactory;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">LegacySourceTransformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            String name,</span></span></span><br><span class="line"><span class="function"><span class="params">            StreamSource&lt;T, ?&gt; operator,</span></span></span><br><span class="line"><span class="function"><span class="params">            TypeInformation&lt;T&gt; outputType,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">int</span> parallelism,</span></span></span><br><span class="line"><span class="function"><span class="params">            Boundedness boundedness)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 使用Operator工厂将传入的StreamSource存储起来</span></span><br><span class="line">        <span class="keyword">this</span>(name, SimpleOperatorFactory.of(operator), outputType, parallelism, boundedness);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>总结一下，<code>env.fromElements(1, 2, 3, 4, 5)</code>做了这些事：</p>
+<ol>
+<li>创建<code>Function</code>：用一个内置的<code>FromElementsFunction</code>作为<code>DataStream</code>的源。</li>
+<li>创建<code>StreamOperator</code>：把<code>FromElementsFunction</code>包装进<code>StreamSource</code>中。</li>
+<li>创建<code>Transformation</code>，把<code>StreamSource</code>包装进<code>LegacySourceTransformation</code>中。</li>
+</ol>
+<p>到此为止，刚才创建的Transformation还没有与其他地方产生联系，继续往下分析代码。</p>
+<h2 id="数据转换"><a href="#数据转换" class="headerlink" title="数据转换"></a>数据转换</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用户代码</span></span><br><span class="line">DataStream&lt;Integer&gt; transform = source.map(x -&gt; x * x);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. org.apache.flink.streaming.api.datastream.DataStream#map(org.apache.flink.api.common.functions.MapFunction&lt;T,R&gt;)</span></span><br><span class="line"><span class="keyword">public</span> &lt;R&gt; <span class="function">SingleOutputStreamOperator&lt;R&gt; <span class="title">map</span><span class="params">(MapFunction&lt;T, R&gt; mapper)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 参数mapper是lambda表达式 x -&gt; x * x, 获取返回值类型</span></span><br><span class="line">    TypeInformation&lt;R&gt; outType =</span><br><span class="line">            TypeExtractor.getMapReturnTypes(</span><br><span class="line">                    clean(mapper), getType(), Utils.getCallLocationName(), <span class="keyword">true</span>);</span><br><span class="line">    <span class="keyword">return</span> map(mapper, outType);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 2. org.apache.flink.streaming.api.datastream.DataStream#map(org.apache.flink.api.common.functions.MapFunction&lt;T,R&gt;, org.apache.flink.api.common.typeinfo.TypeInformation&lt;R&gt;)</span></span><br><span class="line"><span class="keyword">public</span> &lt;R&gt; <span class="function">SingleOutputStreamOperator&lt;R&gt; <span class="title">map</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            MapFunction&lt;T, R&gt; mapper, TypeInformation&lt;R&gt; outputType)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 这里将mapper function用StreamMap这个StreamOperator包装起来</span></span><br><span class="line">    <span class="keyword">return</span> transform(<span class="string">"Map"</span>, outputType, <span class="keyword">new</span> StreamMap&lt;&gt;(clean(mapper)));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. org.apache.flink.streaming.api.datastream.DataStream#doTransform</span></span><br><span class="line"><span class="keyword">protected</span> &lt;R&gt; <span class="function">SingleOutputStreamOperator&lt;R&gt; <span class="title">doTransform</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        String operatorName,</span></span></span><br><span class="line"><span class="function"><span class="params">        TypeInformation&lt;R&gt; outTypeInfo,</span></span></span><br><span class="line"><span class="function"><span class="params">        StreamOperatorFactory&lt;R&gt; operatorFactory)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    OneInputTransformation&lt;T, R&gt; resultTransform =</span><br><span class="line">            <span class="keyword">new</span> OneInputTransformation&lt;&gt;( <span class="comment">// 用OneInputTransformation将StreamMap包装起来（operatorFactory），并且传入this.transformation作为新建的OneInputTransformation的input</span></span><br><span class="line">                    <span class="keyword">this</span>.transformation,</span><br><span class="line">                    operatorName,</span><br><span class="line">                    operatorFactory,</span><br><span class="line">                    outTypeInfo,</span><br><span class="line">                    environment.getParallelism());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将resultTransform转换为SingleOutputStreamOperator（SingleOutputStreamOperator是DataStream）</span></span><br><span class="line">    SingleOutputStreamOperator&lt;R&gt; returnStream =</span><br><span class="line">            <span class="keyword">new</span> SingleOutputStreamOperator(environment, resultTransform);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将resultTransform加入到environment的transformations列表中</span></span><br><span class="line">    getExecutionEnvironment().addOperator(resultTransform);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> returnStream;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>总结一下，<code>source.map(x -&gt; x * x)</code>做了这些事：</p>
+<ol>
+<li>基于lambda function创建<code>StreamOperator</code>（<code>StreamMap</code>）和<code>Transformation</code>（<code>OneInputTransformation</code>）。</li>
+<li>将上个创建的<code>LegacySourceTransformation</code>作为input，用于构建本轮创建的<code>OneInputTransformation</code>。</li>
+<li>将<code>Transformation</code>加入到transformations列表中。</li>
+</ol>
+<h2 id="Print-Sink"><a href="#Print-Sink" class="headerlink" title="Print Sink"></a>Print Sink</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用户代码</span></span><br><span class="line">transform.print();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. org.apache.flink.streaming.api.datastream.DataStream#print()</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> DataStreamSink&lt;T&gt; <span class="title">print</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// PrintSinkFunction是一类sink function，其invoke()方法将数据打印到标准输出上</span></span><br><span class="line">    PrintSinkFunction&lt;T&gt; printFunction = <span class="keyword">new</span> PrintSinkFunction&lt;&gt;();</span><br><span class="line">    <span class="keyword">return</span> addSink(printFunction).name(<span class="string">"Print to Std. Out"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. org.apache.flink.streaming.api.datastream.DataStream#addSink</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> DataStreamSink&lt;T&gt; <span class="title">addSink</span><span class="params">(SinkFunction&lt;T&gt; sinkFunction)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// StreamSink是AbstractUdfStreamOperator的实现类</span></span><br><span class="line">    StreamSink&lt;T&gt; sinkOperator = <span class="keyword">new</span> StreamSink&lt;&gt;(clean(sinkFunction));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// DataStreamSink的构造方法初始化LegacySinkTransformation</span></span><br><span class="line">    DataStreamSink&lt;T&gt; sink = <span class="keyword">new</span> DataStreamSink&lt;&gt;(<span class="keyword">this</span>, sinkOperator);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将sink的LegacySinkTransformation对象加入到env的transformations中</span></span><br><span class="line">    getExecutionEnvironment().addOperator(sink.getTransformation());</span><br><span class="line">    <span class="keyword">return</span> sink;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注：DataStreamSink的构造方法</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="title">DataStreamSink</span><span class="params">(DataStream&lt;T&gt; inputStream, StreamSink&lt;T&gt; operator)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.transformation =</span><br><span class="line">            (PhysicalTransformation&lt;T&gt;)</span><br><span class="line">                    <span class="keyword">new</span> LegacySinkTransformation&lt;&gt;( <span class="comment">// 传入input的Transformation</span></span><br><span class="line">                            inputStream.getTransformation(),</span><br><span class="line">                            <span class="string">"Unnamed"</span>,</span><br><span class="line">                            operator,</span><br><span class="line">                            inputStream.getExecutionEnvironment().getParallelism());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>总结一下, <code>transform.print()</code>做了这些事:</p>
+<ol>
+<li>创建<code>PrintSinkFunction</code>对象，基于<code>PrintSinkFunction</code>对象创建<code>StreamSink</code>这个sink operator</li>
+<li>基于StreamSink创建<code>LegacySinkTransformation</code>，其input是上轮创建的<code>OneInputTransformation</code>。</li>
+<li>将<code>LegacySinkTransformation</code>加入到env中</li>
+</ol>
+<h2 id="提交执行"><a href="#提交执行" class="headerlink" title="提交执行"></a>提交执行</h2><p>前文提到过，<code>StreamGraph</code>是基于<code>Transformation</code>的关系树生成，那么<code>Transformation</code>树是以怎样的数据结构表示呢？首先，所有的<code>Transformation</code>是存储在<code>StreamExecutionEnvironment</code>对象中的<code>List&lt;Transformation&lt;?&gt;&gt; transformations</code>，其次，每个<code>Transformation</code>都有一个全局唯一的<code>idCounter</code>，<code>idCounter</code>=1表示树的根节点，最后，除source外，每个<code>Transformation</code>都有一个（或多个）<code>input Transformation</code>，用于表示其父节点，有了这些信息，就能构建出完整的一颗<code>Transformation</code>树。</p>
+<p>根据上面的分析，三行代码创建了三个Transformation，其中后两个Transformation被加入到env中。看下当前env中Transformation的情况：<br><img src="/uploads/Xnip2021-08-02_11-35-31.jpg" alt></p>
+<p><img src="/uploads/Xnip2021-08-02_11-37-28.jpg" alt></p>
+<p>可以看到：</p>
+<ol>
+<li>transformations列表第一条元素是第二轮创建的<code>OneInputTransformation</code>。<ul>
+<li>id=2，input是第一轮创建的<code>LegacySourceTransformation</code>。</li>
+<li>operator是<code>StreamMap</code>，operator中的userFunction是lambda表达式<code>x -&gt; x * x</code></li>
+</ul>
+</li>
+<li>transformations第二条元素是第三轮创建的LegacySinkTransformation<ul>
+<li>id=3, input是第二轮创建的<code>OneInputTransformation</code>。</li>
+<li>operator是<code>StreamSink</code>，operator中的userFunction是flink自带的<code>PrintSinkFunction</code>。</li>
+</ul>
+</li>
+<li>第一轮创建的<code>LegacySourceTransformation</code>不在transformations列表中<ul>
+<li>id=1，operator是<code>StreamSource</code>，userFunction是flink自带的<code>FromElementsFunction</code>。</li>
+</ul>
+</li>
+</ol>
+<p>接下来看一下如何基于上面的transformations生成<code>StreamGraph</code>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用户代码</span></span><br><span class="line">env.execute();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#execute()</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> JobExecutionResult <span class="title">execute</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> execute(getJobName());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#execute(java.lang.String)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> JobExecutionResult <span class="title">execute</span><span class="params">(String jobName)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    Preconditions.checkNotNull(jobName, <span class="string">"Streaming Job name should not be null."</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> execute(getStreamGraph(jobName));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#getStreamGraph(java.lang.String)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> StreamGraph <span class="title">getStreamGraph</span><span class="params">(String jobName)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> getStreamGraph(jobName, <span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4. org.apache.flink.streaming.api.environment.StreamExecutionEnvironment#getStreamGraph(java.lang.String, boolean)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> StreamGraph <span class="title">getStreamGraph</span><span class="params">(String jobName, <span class="keyword">boolean</span> clearTransformations)</span> </span>&#123;</span><br><span class="line">    StreamGraph streamGraph = getStreamGraphGenerator().setJobName(jobName).generate();</span><br><span class="line">    <span class="keyword">if</span> (clearTransformations) &#123;</span><br><span class="line">        <span class="keyword">this</span>.transformations.clear();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> streamGraph;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面的代码说明最终是通过调用<code>StreamGraphGenerator</code>的<code>generate()</code>生成<code>StreamGraph</code>,<code>StreamGraph</code>到底是什么呢？ </p>
+<p>官方对<code>StreamGraph</code>的定义是：</p>
+<blockquote>
+<p>Class representing the streaming topology. It contains all the information necessary to build the jobgraph for the execution.（用于表示流拓扑结构的类，包含所有用于构建运行时jobGraph的必要信息）</p>
+</blockquote>
+<p>包含的“必要信息”举例如下：</p>
+<ul>
+<li>配置信息：如执行配置<code>ExecutionConfig</code>，checkpoint配置<code>CheckpointConfig</code>，savepoint恢复配置<code>SavepointRestoreSettings</code>，时间属性<code>TimeCharacteristic</code>，状态后端<code>StateBackend</code>等。</li>
+<li>拓扑结构：source节点id<code>Set&lt;Integer&gt; sources</code>，sink节点id<code>Set&lt;Integer&gt; sinks</code>，Graph的节点信息<code>Map&lt;Integer, StreamNode&gt; streamNodes</code>等。</li>
+</ul>
+<p>描述拓扑结构的最重要部分是<code>Map&lt;Integer, StreamNode&gt; streamNodes</code>，其key是<code>Transformation</code>的<code>idCounter</code>，value是<code>StreamNode</code>对象。</p>
+<p><code>StreamNode</code>是<code>StreamGraph</code>的节点，关键属性有：</p>
+<ol>
+<li><code>List&lt;StreamEdge&gt; inEdges</code>, <code>List&lt;StreamEdge&gt; outEdges</code>：该节点输入和输出<ul>
+<li><code>StreamEdge</code>表示<code>StreamGraph</code>的边，其主要属性是<code>sourceId</code>和<code>targetId</code>用于标识该边连接的source节点和target节点</li>
+</ul>
+</li>
+<li><code>StreamOperatorFactory&lt;?&gt; operatorFactory</code>: 工厂对象，用于提供在该节点上处理数据的operator</li>
+</ol>
+<p>继续看<code>StreamGraph</code>是如何生成的，<code>StreamGraphGenerator</code>的<code>generate()</code>方法如下:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> StreamGraph <span class="title">generate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    streamGraph = <span class="keyword">new</span> StreamGraph(executionConfig, checkpointConfig, savepointRestoreSettings); <span class="comment">// 创建一个空的StreamGraph</span></span><br><span class="line">    shouldExecuteInBatchMode = shouldExecuteInBatchMode(runtimeExecutionMode); <span class="comment">// 决定是否是批模式</span></span><br><span class="line">    configureStreamGraph(streamGraph); <span class="comment">// 一些其他配置，如是否Chaining，TimeCharacteristic，StateBackend等</span></span><br><span class="line"></span><br><span class="line">    alreadyTransformed = <span class="keyword">new</span> HashMap&lt;&gt;(); <span class="comment">// 记录已经执行完转换的Transformation</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (Transformation&lt;?&gt; transformation : transformations) &#123; <span class="comment">// 对list中的transformation逐个执行transform方法</span></span><br><span class="line">        transform(transformation);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> StreamGraph builtStreamGraph = streamGraph;</span><br><span class="line"></span><br><span class="line">    alreadyTransformed.clear();</span><br><span class="line">    alreadyTransformed = <span class="keyword">null</span>;</span><br><span class="line">    streamGraph = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> builtStreamGraph;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>transform</code>的调用链路较深，这里截取关键片段如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. org.apache.flink.streaming.api.graph.StreamGraphGenerator#transform</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Collection&lt;Integer&gt; <span class="title">transform</span><span class="params">(Transformation&lt;?&gt; transform)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据Transformation的具体实现类，调用对应的TransformationTranslator的translate对该Transformation进行转换</span></span><br><span class="line">    <span class="keyword">final</span> TransformationTranslator&lt;?, Transformation&lt;?&gt;&gt; translator =</span><br><span class="line">            (TransformationTranslator&lt;?, Transformation&lt;?&gt;&gt;)</span><br><span class="line">                    translatorMap.get(transform.getClass());</span><br><span class="line"></span><br><span class="line">    Collection&lt;Integer&gt; transformedIds;</span><br><span class="line">    <span class="keyword">if</span> (translator != <span class="keyword">null</span>) &#123;</span><br><span class="line">        transformedIds = translate(translator, transform);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        transformedIds = legacyTransform(transform);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line">    <span class="keyword">return</span> transformedIds;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. org.apache.flink.streaming.api.graph.StreamGraphGenerator#translate</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Collection&lt;Integer&gt; <span class="title">translate</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> TransformationTranslator&lt;?, Transformation&lt;?&gt;&gt; translator,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> Transformation&lt;?&gt; transform)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// getParentInputIds是一个递归调用，确保当前Transformation的父Transformation已经执行完translate</span></span><br><span class="line">    <span class="keyword">final</span> List&lt;Collection&lt;Integer&gt;&gt; allInputIds = getParentInputIds(transform.getInputs());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用具体的translator方法转换</span></span><br><span class="line">    <span class="keyword">return</span> shouldExecuteInBatchMode</span><br><span class="line">            ? translator.translateForBatch(transform, context)</span><br><span class="line">            : translator.translateForStreaming(transform, context);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. org.apache.flink.streaming.api.graph.TransformationTranslator#translateForStreaming</span></span><br><span class="line"><span class="comment">// 4. org.apache.flink.streaming.api.graph.SimpleTransformationTranslator#translateForStreamingInternal</span></span><br><span class="line"><span class="comment">// translateForStreamingInternal对不同的Transformation有不同的实现类，例如上述示例代码中的map操作会调用OneInputTransformationTranslator#translateForStreamingInternal</span></span><br><span class="line"><span class="comment">// 最终执行的方法是：AbstractOneInputTransformationTranslator#translateInternal</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Collection&lt;Integer&gt; <span class="title">translateInternal</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> Transformation&lt;OUT&gt; transformation,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> StreamOperatorFactory&lt;OUT&gt; operatorFactory,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> TypeInformation&lt;IN&gt; inputType,</span></span></span><br><span class="line"><span class="function"><span class="params">        @Nullable <span class="keyword">final</span> KeySelector&lt;IN, ?&gt; stateKeySelector,</span></span></span><br><span class="line"><span class="function"><span class="params">        @Nullable <span class="keyword">final</span> TypeInformation&lt;?&gt; stateKeyType,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">final</span> Context context)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> StreamGraph streamGraph = context.getStreamGraph();</span><br><span class="line">    <span class="keyword">final</span> String slotSharingGroup = context.getSlotSharingGroup();</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> transformationId = transformation.getId();</span><br><span class="line">    <span class="keyword">final</span> ExecutionConfig executionConfig = streamGraph.getExecutionConfig();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为streamGraph添加StreamNode，过程中保留该StreamNode的operatorFactory</span></span><br><span class="line">    streamGraph.addOperator(</span><br><span class="line">            transformationId,</span><br><span class="line">            slotSharingGroup,</span><br><span class="line">            transformation.getCoLocationGroupKey(),</span><br><span class="line">            operatorFactory,</span><br><span class="line">            inputType,</span><br><span class="line">            transformation.getOutputType(),</span><br><span class="line">            transformation.getName());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (stateKeySelector != <span class="keyword">null</span>) &#123;</span><br><span class="line">        TypeSerializer&lt;?&gt; keySerializer = stateKeyType.createSerializer(executionConfig);</span><br><span class="line">        streamGraph.setOneInputStateKey(transformationId, stateKeySelector, keySerializer);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 省略...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为streamGraph添加StreamEdge</span></span><br><span class="line">    <span class="keyword">for</span> (Integer inputId : context.getStreamNodeIds(parentTransformations.get(<span class="number">0</span>))) &#123;</span><br><span class="line">        streamGraph.addEdge(inputId, transformationId, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Collections.singleton(transformationId);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文主要讲解如何从用户代码生成<code>StreamGraph</code>的过程。涉及到多个日常开发不会接触的概念，如<code>Transformation</code>, <code>StreamOperator</code>, <code>StreamNode</code>, <code>StreamEdge</code>等。</p>
+<p><code>StreamGraph</code>可以通过<code>env.getStreamGraph().getStreamingPlanAsJSON()</code>获取json格式的输出，在 <a href="http://flink.apache.org/visualizer/" target="_blank" rel="noopener">http://flink.apache.org/visualizer/</a> 进行可视化展示。</p>
+<p>例如，上面例子的streamGraph json为:<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"nodes"</span> : [ &#123;</span><br><span class="line">    <span class="attr">"id"</span> : <span class="number">1</span>,</span><br><span class="line">    <span class="attr">"type"</span> : <span class="string">"Source: Collection Source"</span>,</span><br><span class="line">    <span class="attr">"pact"</span> : <span class="string">"Data Source"</span>,</span><br><span class="line">    <span class="attr">"contents"</span> : <span class="string">"Source: Collection Source"</span>,</span><br><span class="line">    <span class="attr">"parallelism"</span> : <span class="number">1</span></span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="attr">"id"</span> : <span class="number">2</span>,</span><br><span class="line">    <span class="attr">"type"</span> : <span class="string">"Map"</span>,</span><br><span class="line">    <span class="attr">"pact"</span> : <span class="string">"Operator"</span>,</span><br><span class="line">    <span class="attr">"contents"</span> : <span class="string">"Map"</span>,</span><br><span class="line">    <span class="attr">"parallelism"</span> : <span class="number">1</span>,</span><br><span class="line">    <span class="attr">"predecessors"</span> : [ &#123;</span><br><span class="line">      <span class="attr">"id"</span> : <span class="number">1</span>,</span><br><span class="line">      <span class="attr">"ship_strategy"</span> : <span class="string">"FORWARD"</span>,</span><br><span class="line">      <span class="attr">"side"</span> : <span class="string">"second"</span></span><br><span class="line">    &#125; ]</span><br><span class="line">  &#125;, &#123;</span><br><span class="line">    <span class="attr">"id"</span> : <span class="number">3</span>,</span><br><span class="line">    <span class="attr">"type"</span> : <span class="string">"Sink: Print to Std. Out"</span>,</span><br><span class="line">    <span class="attr">"pact"</span> : <span class="string">"Data Sink"</span>,</span><br><span class="line">    <span class="attr">"contents"</span> : <span class="string">"Sink: Print to Std. Out"</span>,</span><br><span class="line">    <span class="attr">"parallelism"</span> : <span class="number">1</span>,</span><br><span class="line">    <span class="attr">"predecessors"</span> : [ &#123;</span><br><span class="line">      <span class="attr">"id"</span> : <span class="number">2</span>,</span><br><span class="line">      <span class="attr">"ship_strategy"</span> : <span class="string">"FORWARD"</span>,</span><br><span class="line">      <span class="attr">"side"</span> : <span class="string">"second"</span></span><br><span class="line">    &#125; ]</span><br><span class="line">  &#125; ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>具体图形为：<br><img src="/uploads/Xnip2021-08-02_16-05-48.jpg" alt></p>
+<p>参考文章：</p>
+<ol>
+<li><a href="https://wuchong.me/blog/2016/05/04/flink-internal-how-to-build-streamgraph/" target="_blank" rel="noopener">https://wuchong.me/blog/2016/05/04/flink-internal-how-to-build-streamgraph/</a></li>
+<li><a href="https://matt33.com/2019/12/08/flink-stream-graph-2/" target="_blank" rel="noopener">https://matt33.com/2019/12/08/flink-stream-graph-2/</a></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/31/20190731-Kryo反序列化失败/" rel="next" title="20190731 Kryo反序列化失败">
+                <i class="fa fa-chevron-left"></i> 20190731 Kryo反序列化失败
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微博</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/uploads/timg.jpeg" alt="Hengyu Dai">
+            
+              <p class="site-author-name" itemprop="name">Hengyu Dai</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一-四种Graph"><span class="nav-number">1.</span> <span class="nav-text">一. 四种Graph</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二-StreamGraph生成中的关键对象"><span class="nav-number">2.</span> <span class="nav-text">二. StreamGraph生成中的关键对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DataStream"><span class="nav-number">2.1.</span> <span class="nav-text">DataStream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transformation"><span class="nav-number">2.2.</span> <span class="nav-text">Transformation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StreamOperator"><span class="nav-number">2.3.</span> <span class="nav-text">StreamOperator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Function"><span class="nav-number">2.4.</span> <span class="nav-text">Function</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StreamGraph-Transformation-StreamOperator-Function关系"><span class="nav-number">2.5.</span> <span class="nav-text">StreamGraph/Transformation/StreamOperator/Function关系</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三-源码跟踪"><span class="nav-number">3.</span> <span class="nav-text">三. 源码跟踪</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#创建环境"><span class="nav-number">3.1.</span> <span class="nav-text">创建环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建source-stream"><span class="nav-number">3.2.</span> <span class="nav-text">构建source stream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据转换"><span class="nav-number">3.3.</span> <span class="nav-text">数据转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Print-Sink"><span class="nav-number">3.4.</span> <span class="nav-text">Print Sink</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#提交执行"><span class="nav-number">3.5.</span> <span class="nav-text">提交执行</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hengyu Dai</span>
+
+  
+</div>
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: '2O51HSfM3PM59G16Br2G69DR-gzGzoHsz',
+        appKey: '3MxdKkKfYYICrXOOOey8Mz7s',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("2O51HSfM3PM59G16Br2G69DR-gzGzoHsz", "3MxdKkKfYYICrXOOOey8Mz7s");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
