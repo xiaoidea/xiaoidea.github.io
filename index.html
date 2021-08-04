@@ -385,7 +385,16 @@
       
         
           
-            
+            <p>前面的文章介绍了从用户代码生成StreamGraph、JobGraph的过程，这两部分都是在Client端完成的。Flink借助akka actor实现进程间的rpc调用，下一步是client将JobGraph对象发送给JobManager，JobManager将JobGraph转换成并行化的ExecutionGraph。</p>
+<p>介绍如何生成ExecutionGraph之前，先引入ExecutionGraph中的几个概念：</p>
+<ul>
+<li><code>ExecutionJobVertex</code> : ExecutionGraph中的节点，与JobGraph中的<code>JobVertex</code>一一对应，表示一个task。</li>
+<li><code>ExecutionVertex</code> : 表示一个subtask，一个<code>ExecutionJobVertex</code>对应一个或多个<code>ExecutionVertex</code>（取决于该task的并行度）。</li>
+<li><code>Execution</code> : 表示一个<code>ExecutionVertex</code>的一次尝试执行，当任务失败时<code>ExecutionVertex</code>可能会被调起多次，每次执行被称为一个<code>Execution</code>，由<code>ExecutionAttemptID</code>唯一标识。</li>
+<li></li>
+</ul>
+<p>再看一下主要数据结构:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) `ExecutionGraph`</span><br><span class="line"></span><br><span class="line">主要由一个map和一个list表达，其元素都是节点`ExecutionJobVertex`</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExecutionGraph</span> <span class="keyword">implements</span> <span class="title">AccessExecutionGraph</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 存储所有ExecutionJobVertex</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;JobVertexID, ExecutionJobVertex&gt; tasks;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 按照创建顺序存储ExecutionJobVertex</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;ExecutionJobVertex&gt; verticesInCreationOrder;</span><br></pre></td></tr></table></figure></p>
+
           
         
       
