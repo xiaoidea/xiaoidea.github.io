@@ -91,7 +91,7 @@
 <meta property="og:image" content="http://yoursite.com/uploads/Xnip2021-08-03_19-19-47.jpg">
 <meta property="og:image" content="http://yoursite.com/uploads/Xnip2021-08-02_17-18-58.jpg">
 <meta property="og:image" content="http://yoursite.com/uploads/Xnip2021-08-04_11-40-25.jpg">
-<meta property="og:updated_time" content="2021-08-05T10:24:42.813Z">
+<meta property="og:updated_time" content="2021-08-05T10:41:52.366Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Flink执行流程(二)：生成JobGraph">
 <meta name="twitter:description" content="上一篇文章介绍了用户代码是如何被转化为StreamGraph，本文介绍StreamGraph如何被转换为JobGraph，继续使用上节的代码示例：123456789101112131415public static void main(String[] args) throws Exception &amp;#123;    final StreamExecutionEnvironment env = S">
@@ -392,7 +392,7 @@
 <p>以上程序的StreamGraph为：<br><img src="/uploads/Xnip2021-08-03_19-19-47.jpg" alt></p>
 <p>首先对<code>JobGraph</code>做一个简单的介绍：</p>
 <ol>
-<li>一个<code>JobGraph</code>表示一个flink流处理程序，它是由client端产生，是Flink JobManager能接收的对象，任何上层API编写的flink程序（Table/SQL/Stream API/Batch API）都会被转换为<code>JobGraph</code>提交给JobManager。</li>
+<li>一个<code>JobGraph</code>表示一个flink流处理程序，它是由client端产生，是Flink JobManager能接收的对象，任何上层API编写的flink程序（Table/SQL/Stream/Batch）都会被转换为<code>JobGraph</code>提交给JobManager。</li>
 <li><code>JobGraph</code>使用<code>Map&lt;JobVertexID, JobVertex&gt; taskVertices</code>表示，其中<code>JobVertex</code>表示<code>JobGraph</code>的节点，在<code>JobVertex</code>对象中包含<code>ArrayList&lt;JobEdge&gt; inputs</code>表示该节点的入边。</li>
 <li><code>JobGraph</code>相比于<code>StreamGraph</code>，会将可以chain在一起的节点组成一个节点。</li>
 <li><code>JobGraph</code>中出现一个新概念，<code>IntermediateDataSet</code>，表示一个operator产生的中间结果，其作为桥梁连接<code>JobVertex</code>和<code>JobEdge</code></li>
