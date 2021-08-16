@@ -293,6 +293,146 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/08/10/Flink-Runtime-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Hengyu Dai">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/uploads/timg.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="hyd-Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/08/10/Flink-Runtime-一/" itemprop="url">Flink Runtime(一)</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-08-10T18:12:16+08:00">
+                2021-08-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2021/08/10/Flink-Runtime-一/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/08/10/Flink-Runtime-一/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2021/08/10/Flink-Runtime-一/" class="leancloud_visitors" data-flag-title="Flink Runtime(一)">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/08/04/Flink执行流程-三/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -605,7 +745,7 @@
 <p><code>getJobGraph</code>最终会通过<code>StreamingJobGraphGenerator#createJobGraph()</code>来生成<code>jobGraph</code>：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> JobGraph <span class="title">createJobGraph</span><span class="params">(StreamGraph streamGraph, @Nullable JobID jobID)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 根据streamGraph创建StreamingJobGraphGenerator对象，然后调用其createJobGraph创建jobGraph</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> StreamingJobGraphGenerator(streamGraph, jobID).createJobGraph();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h1 id="如何生成JobGraph"><a href="#如何生成JobGraph" class="headerlink" title="如何生成JobGraph"></a>如何生成JobGraph</h1><p>生成<code>JobGraph</code>的入口是<code>org.apache.flink.streaming.api.graph.StreamingJobGraphGenerator#createJobGraph()</code><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> JobGraph <span class="title">createJobGraph</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    preValidate(); <span class="comment">// 校验是否是iterative任务，如果是，不能开启checkpoint，否则直接报错退出</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// make sure that all vertices start immediately</span></span><br><span class="line">    jobGraph.setScheduleMode(streamGraph.getScheduleMode());</span><br><span class="line">    jobGraph.enableApproximateLocalRecovery(</span><br><span class="line">            streamGraph.getCheckpointConfig().isApproximateLocalRecoveryEnabled());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为每个算子生成唯一的operator id</span></span><br><span class="line">    Map&lt;Integer, <span class="keyword">byte</span>[]&gt; hashes =</span><br><span class="line">            defaultStreamGraphHasher.traverseStreamGraphAndGenerateHashes(streamGraph);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 兼容历史版本</span></span><br><span class="line">    List&lt;Map&lt;Integer, <span class="keyword">byte</span>[]&gt;&gt; legacyHashes = <span class="keyword">new</span> ArrayList&lt;&gt;(legacyStreamGraphHashers.size());</span><br><span class="line">    <span class="keyword">for</span> (StreamGraphHasher hasher : legacyStreamGraphHashers) &#123;</span><br><span class="line">        legacyHashes.add(hasher.traverseStreamGraphAndGenerateHashes(streamGraph));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 核心部分：递归将operator chain在一起，构造JobGraph（生成JobVertex/JobEdge）</span></span><br><span class="line">    setChaining(hashes, legacyHashes);</span><br><span class="line">    <span class="comment">// 设置JobGraph中JobVertex的入边</span></span><br><span class="line">    setPhysicalEdges();</span><br><span class="line">    <span class="comment">// 设置SlotSharingGroup</span></span><br><span class="line">    setSlotSharingAndCoLocation();</span><br><span class="line"></span><br><span class="line">    setManagedMemoryFraction(</span><br><span class="line">            Collections.unmodifiableMap(jobVertices),</span><br><span class="line">            Collections.unmodifiableMap(vertexConfigs),</span><br><span class="line">            Collections.unmodifiableMap(chainedConfigs),</span><br><span class="line">            id -&gt; streamGraph.getStreamNode(id).getManagedMemoryOperatorScopeUseCaseWeights(),</span><br><span class="line">            id -&gt; streamGraph.getStreamNode(id).getManagedMemorySlotScopeUseCases());</span><br><span class="line"></span><br><span class="line">    configureCheckpointing();</span><br><span class="line"></span><br><span class="line">    jobGraph.setSavepointRestoreSettings(streamGraph.getSavepointRestoreSettings());</span><br><span class="line"></span><br><span class="line">    JobGraphUtils.addUserArtifactEntries(streamGraph.getUserArtifacts(), jobGraph);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// set the ExecutionConfig last when it has been finalized</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        jobGraph.setExecutionConfig(streamGraph.getExecutionConfig());</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalConfigurationException(</span><br><span class="line">                <span class="string">"Could not serialize the ExecutionConfig."</span></span><br><span class="line">                        + <span class="string">"This indicates that non-serializable types (like custom serializers) were registered"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> jobGraph;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>以上代码中最核心的部分是<code>setChaining(hashes, legacyHashes);</code>，这里先介绍下<code>defaultStreamGraphHasher.traverseStreamGraphAndGenerateHashes(streamGraph)</code>方法，该方法为每个operator生成唯一的id。每个算子拥有唯一id的作用是flink作业在从state恢复时，根据该id来匹配状态和算子。看一下id是如何生成的：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">generateNodeHash</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        StreamNode node,</span></span></span><br><span class="line"><span class="function"><span class="params">        HashFunction hashFunction,</span></span></span><br><span class="line"><span class="function"><span class="params">        Map&lt;Integer, <span class="keyword">byte</span>[]&gt; hashes,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">boolean</span> isChainingEnabled,</span></span></span><br><span class="line"><span class="function"><span class="params">        StreamGraph streamGraph)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取用户是否显示指定了uid</span></span><br><span class="line">    String userSpecifiedHash = node.getTransformationUID();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果用户没有指定uid，根据一定规则生成</span></span><br><span class="line">    <span class="keyword">if</span> (userSpecifiedHash == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// Check that all input nodes have their hashes computed</span></span><br><span class="line">        <span class="keyword">for</span> (StreamEdge inEdge : node.getInEdges()) &#123;</span><br><span class="line">            <span class="comment">// If the input node has not been visited yet, the current</span></span><br><span class="line">            <span class="comment">// node will be visited again at a later point when all input</span></span><br><span class="line">            <span class="comment">// nodes have been visited and their hashes set.</span></span><br><span class="line">            <span class="keyword">if</span> (!hashes.containsKey(inEdge.getSourceId())) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Hasher hasher = hashFunction.newHasher();</span><br><span class="line">        <span class="keyword">byte</span>[] hash =</span><br><span class="line">                generateDeterministicHash(node, hasher, hashes, isChainingEnabled, streamGraph);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hashes.put(node.getId(), hash) != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// Sanity check</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                    <span class="string">"Unexpected state. Tried to add node hash "</span></span><br><span class="line">                            + <span class="string">"twice. This is probably a bug in the JobGraph generator."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果用户指定了uid，generateUserSpecifiedHash(node, hasher)方法根据uid生成byte[]哈希值</span></span><br><span class="line">        Hasher hasher = hashFunction.newHasher();</span><br><span class="line">        <span class="keyword">byte</span>[] hash = generateUserSpecifiedHash(node, hasher);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">byte</span>[] previousHash : hashes.values()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (Arrays.equals(previousHash, hash)) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(</span><br><span class="line">                        <span class="string">"Hash collision on user-specified ID "</span></span><br><span class="line">                                + <span class="string">"\""</span></span><br><span class="line">                                + userSpecifiedHash</span><br><span class="line">                                + <span class="string">"\". "</span></span><br><span class="line">                                + <span class="string">"Most likely cause is a non-unique ID. Please check that all IDs "</span></span><br><span class="line">                                + <span class="string">"specified via `uid(String)` are unique."</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hashes.put(node.getId(), hash) != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// Sanity check</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                    <span class="string">"Unexpected state. Tried to add node hash "</span></span><br><span class="line">                            + <span class="string">"twice. This is probably a bug in the JobGraph generator."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>如果用户为显示指定uid，默认的operator id由以下规则生成：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">byte</span>[] generateDeterministicHash(</span><br><span class="line">        StreamNode node,</span><br><span class="line">        Hasher hasher,</span><br><span class="line">        Map&lt;Integer, <span class="keyword">byte</span>[]&gt; hashes,</span><br><span class="line">        <span class="keyword">boolean</span> isChainingEnabled,</span><br><span class="line">        StreamGraph streamGraph) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前节点在图中的位置</span></span><br><span class="line">    generateNodeLocalHash(hasher, hashes.size());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 输出节点的个数</span></span><br><span class="line">    <span class="keyword">for</span> (StreamEdge outEdge : node.getOutEdges()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (isChainable(outEdge, isChainingEnabled, streamGraph)) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Use the hash size again, because the nodes are chained to</span></span><br><span class="line">            <span class="comment">// this node. This does not add a hash for the chained nodes.</span></span><br><span class="line">            generateNodeLocalHash(hasher, hashes.size());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">byte</span>[] hash = hasher.hash().asBytes();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 输入节点的id</span></span><br><span class="line">    <span class="keyword">for</span> (StreamEdge inEdge : node.getInEdges()) &#123;</span><br><span class="line">        <span class="keyword">byte</span>[] otherHash = hashes.get(inEdge.getSourceId());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Sanity check</span></span><br><span class="line">        <span class="keyword">if</span> (otherHash == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                    <span class="string">"Missing hash for input node "</span></span><br><span class="line">                            + streamGraph.getSourceVertex(inEdge)</span><br><span class="line">                            + <span class="string">". Cannot generate hash for "</span></span><br><span class="line">                            + node</span><br><span class="line">                            + <span class="string">"."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; hash.length; j++) &#123;</span><br><span class="line">            hash[j] = (<span class="keyword">byte</span>) (hash[j] * <span class="number">37</span> ^ otherHash[j]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> hash;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果用户未显式指定uid，默认的operator id由以下规则生成：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">byte</span>[] generateDeterministicHash(</span><br><span class="line">        StreamNode node,</span><br><span class="line">        Hasher hasher,</span><br><span class="line">        Map&lt;Integer, <span class="keyword">byte</span>[]&gt; hashes,</span><br><span class="line">        <span class="keyword">boolean</span> isChainingEnabled,</span><br><span class="line">        StreamGraph streamGraph) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前节点在图中的位置</span></span><br><span class="line">    generateNodeLocalHash(hasher, hashes.size());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 输出节点的个数</span></span><br><span class="line">    <span class="keyword">for</span> (StreamEdge outEdge : node.getOutEdges()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (isChainable(outEdge, isChainingEnabled, streamGraph)) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Use the hash size again, because the nodes are chained to</span></span><br><span class="line">            <span class="comment">// this node. This does not add a hash for the chained nodes.</span></span><br><span class="line">            generateNodeLocalHash(hasher, hashes.size());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">byte</span>[] hash = hasher.hash().asBytes();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 输入节点的id</span></span><br><span class="line">    <span class="keyword">for</span> (StreamEdge inEdge : node.getInEdges()) &#123;</span><br><span class="line">        <span class="keyword">byte</span>[] otherHash = hashes.get(inEdge.getSourceId());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Sanity check</span></span><br><span class="line">        <span class="keyword">if</span> (otherHash == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">                    <span class="string">"Missing hash for input node "</span></span><br><span class="line">                            + streamGraph.getSourceVertex(inEdge)</span><br><span class="line">                            + <span class="string">". Cannot generate hash for "</span></span><br><span class="line">                            + node</span><br><span class="line">                            + <span class="string">"."</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; hash.length; j++) &#123;</span><br><span class="line">            hash[j] = (<span class="keyword">byte</span>) (hash[j] * <span class="number">37</span> ^ otherHash[j]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> hash;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>接下来看<code>setChaining</code>方法的实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setChaining</span><span class="params">(Map&lt;Integer, <span class="keyword">byte</span>[]&gt; hashes, List&lt;Map&lt;Integer, <span class="keyword">byte</span>[]&gt;&gt; legacyHashes)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 找到chain的入口（source operator）</span></span><br><span class="line">    <span class="keyword">final</span> Map&lt;Integer, OperatorChainInfo&gt; chainEntryPoints =</span><br><span class="line">            buildChainedInputsAndGetHeadInputs(hashes, legacyHashes);</span><br><span class="line">    <span class="keyword">final</span> Collection&lt;OperatorChainInfo&gt; initialEntryPoints =</span><br><span class="line">            chainEntryPoints.entrySet().stream()</span><br><span class="line">                    .sorted(Comparator.comparing(Entry::getKey))</span><br><span class="line">                    .map(Entry::getValue)</span><br><span class="line">                    .collect(Collectors.toList());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 对每个入口调用createChain方法</span></span><br><span class="line">    <span class="keyword">for</span> (OperatorChainInfo info : initialEntryPoints) &#123;</span><br><span class="line">        createChain(</span><br><span class="line">                info.getStartNodeId(),</span><br><span class="line">                <span class="number">1</span>, <span class="comment">// operators start at position 1 because 0 is for chained source inputs</span></span><br><span class="line">                info,</span><br><span class="line">                chainEntryPoints);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p><code>createChain</code>使用贪心算法，从首节点开始尽可能的尝试合并其子节点，当遇到不能合并的节点时，以下一个节点为首节点，继续该过程，直到遍历完所有节点。</p>
 <h2 id="createChain核心算法"><a href="#createChain核心算法" class="headerlink" title="createChain核心算法"></a>createChain核心算法</h2><p><code>createChain</code>使用贪心算法的思想，对<code>StreamGraph</code>进行深度优先遍历。</p>
@@ -2022,251 +2162,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/24/Profile/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Hengyu Dai">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/uploads/timg.jpeg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="hyd-Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/24/Profile/" itemprop="url">Profile</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-24T21:00:38+08:00">
-                2018-04-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/24/Profile/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/04/24/Profile/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2018/04/24/Profile/" class="leancloud_visitors" data-flag-title="Profile">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="戴恒宇"><a href="#戴恒宇" class="headerlink" title="戴恒宇"></a>戴恒宇</h1><p>大数据开发工程师，数据仓库工程师</p>
-<h2 id="联系方式"><a href="#联系方式" class="headerlink" title="联系方式"></a>联系方式</h2><p>| Tel: 18512547673 |  Email: <a href="mailto:dhytheone@163.com" target="_blank" rel="noopener">dhytheone@163.com</a>|  <a href="http://dhy.party" target="_blank" rel="noopener">My WebSite</a> : <a href="http://dhy.party" target="_blank" rel="noopener">http://dhy.party</a></p>
-<h2 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h2><ul>
-<li>编程语言<ul>
-<li>Java 熟练，掌握常用JVM基础知识</li>
-<li>Shell/Python 日常运维脚本</li>
-</ul>
-</li>
-<li>后端开发<ul>
-<li>熟悉Spring/Spring Boot/MyBatis</li>
-<li>熟悉并发编程</li>
-</ul>
-</li>
-<li>离线数据开发<ul>
-<li>熟悉离线数据仓库建模</li>
-<li>Hive熟练，向社区反馈过多个bug，提交过patch被采纳</li>
-<li>熟悉hadoop mapreduce/hdfs</li>
-</ul>
-</li>
-<li>实时数据开发<ul>
-<li>熟悉Flink、kafka</li>
-<li>建设实时数仓经验及实时数据应用案例</li>
-</ul>
-</li>
-<li>其他<ul>
-<li>有hbase/es/druid使用经验</li>
-<li>理解微服务架构。有使用dubbo经验</li>
-<li>熟练阅读英文文档，奉行clean code，善于解决问题</li>
-</ul>
-</li>
-</ul>
-<h2 id="项目经验"><a href="#项目经验" class="headerlink" title="项目经验"></a>项目经验</h2><ol>
-<li>离线数据开发、Hive二次开发与维护<ul>
-<li>1.1. 离线数仓建设<ul>
-<li>负责BU“用户服务”主题域离线数仓开发，完成自底向上从ods层、dw/mdw层、rpt层报表开发</li>
-<li>数据工具开发：数据同步工具（DB、数仓、Redis之间）、</li>
-</ul>
-</li>
-<li>1.2. Hive二次开发与维护<ul>
-<li>负责部门Hive集群的部署、运维</li>
-<li>二次开发Hive支持多metastore功能，修复日常hive bug，部分反馈社区，<a href="https://issues.apache.org/jira/secure/ViewProfile.jspa?name=hengyu.dai" target="_blank" rel="noopener">Apache Profile: hengyu.dai</a></li>
-</ul>
-</li>
-<li>1.3. Hive服务系统<ul>
-<li>接收Hive Hook传递的SQL，进行SQL解析、鉴权、查询记录归档</li>
-<li>定时检测HiveServer/Metastore server的服务健康校验、发现失败服务自动重启</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>数据系统开发<ul>
-<li>2.1. 元数据系统：全方位管理数据仓库<ul>
-<li>离线数据仓库元数据系统开发，管理离线数仓中的表资源，主要功能包括：表的多维度查询，血缘关系，表的各方面监控。实现的关键词：SQL解析、Hive Hook。</li>
-</ul>
-</li>
-<li>2.2. 即席查询：数据自助查询平台<ul>
-<li>基于Hive Client开发，相比于底层使用hiveserver的开源HUE等产品，大幅提高稳定性。</li>
-<li>开放给产品和运营同学使用，包含表的权限校验、常用数据口径管理</li>
-<li>支持Hive/Presto/Hive on spark多种查询引擎，支持多执行节点</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>实时数仓开发<ul>
-<li>3.1. 从零搭建基于Flink的实时数仓体系<ul>
-<li>负责订单与资金模块的数据源接入，实时数据清洗，实时数据落地与应用（HDFS/HBase）</li>
-<li>清洗用户实时流量数据（用户在不同页面的访问日志）作为算法模型中用户特征数据</li>
-</ul>
-</li>
-<li>3.2. 实时数仓周边服务<ul>
-<li>Redis实时维表：设计维表关联方案，开发Hive与Redis导数工具，开发通用关联维表的工具jar包。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>数据应用<ul>
-<li>4.1. 用户画像系统：提供统一的用户画像、身份服务<ul>
-<li>数据赋能业务，通过离线数仓+实时计算清洗出的用户特征信息，定义用户画像，提供在线接口输出用户画像，用于各种基于用户身份的营销策略，例如发券、促销、新客优惠等。</li>
-</ul>
-</li>
-<li>4.2. 故障自动定位系统：利用数据辅助业务线发现故障<ul>
-<li>异常监控探测：利用业务系统监控看板，及时发现异常监控指标。</li>
-<li>异常app发现：利用系统的异常trace数据定位app异常。</li>
-<li>故障根源发现：综合多个故障appcode，通过绘制系统间调用拓扑图，从前向后追溯故障根源，给出故障报告。</li>
-</ul>
-</li>
-<li>4.3. 通用数据接口：离线数仓与业务系统之间的数据桥梁<ul>
-<li>将数据仓库中离线计算的数据通过HTTP接口传输给业务系统使用。</li>
-<li>配置化、新增数据时无需开发代码。</li>
-</ul>
-</li>
-<li>4.4. 实时大屏：直播带货效果的实时监控<ul>
-<li>重要活动时，实时计算活动期间的各项运营指标，在BI系统上实时更新，实时数据大屏。</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-<h2 id="工作经历"><a href="#工作经历" class="headerlink" title="工作经历"></a>工作经历</h2><ul>
-<li>2016-至今 去哪儿网 目的地事业部 数据开发</li>
-</ul>
-<h2 id="教育经历"><a href="#教育经历" class="headerlink" title="教育经历"></a>教育经历</h2><ul>
-<li>2009-2013 中山大学 软件学院 学士学位</li>
-<li>2013-2016 南京大学 计算机科学与技术 硕士学位</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2319,7 +2214,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
